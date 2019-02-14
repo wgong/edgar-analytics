@@ -19,46 +19,34 @@ def parse_line(l, delimitor=','):
         return None
     t = datetime.strptime(f"{lst[header_map['date']]}T{lst[header_map['time']]}", '%Y-%m-%dT%H:%M:%S')
     t_sec = int(time.mktime(t.timetuple()))
-    return [lst[header_map['ip']], t_sec \
-        , lst[header_map['date']], lst[header_map['time']] ]
-        # , f"{lst[header_map['cik']]}/{lst[header_map['accession']]}/{lst[header_map['extention']]}"]
+    return [lst[header_map['ip']], t_sec, lst[header_map['date']], lst[header_map['time']] ]
 
 # write each ip session
-def write_output(f, ip, lst):
-    
+def write_output(f, ip, lst):   
     date_time_first_req = f"{lst[0][1]} {lst[0][2]}"
     date_time_last_req = f"{lst[-1][1]} {lst[-1][2]}"
-    # calculate req_duration
     duration = lst[-1][0] - lst[0][0] + 1
-    # # count unique req
-    # uniq_req_map = {}  # req as key
-    # for item in lst:
-    #     uniq_req_map[item[3]] = 1
-    # req_count = len(uniq_req_map)
     req_count = len(lst)
-
     f.write(f"{ip},{date_time_first_req},{date_time_last_req},{duration},{req_count}\n")
 
 def process_data(file_in, file_out, file_inactivity):
     global headers, header_map
 
     ts1 = time.clock()
-        
+
     with open(file_inactivity) as f:
         INACTIVITY_PERIOD = int(f.read())
 
-    #print(INACTIVITY_PERIOD)
-
     head, tail = os.path.split(file_out)
+    # write out bad log line
     file_err = os.path.join(head, tail.split('.')[0] + ".err")
 
     delimitor=','
+    num_lines = 0
 
     # map to track requests 
-    # ip as key, value is a list of reqs within each session
+    # ip as key, value is a list of reqs within active session
     ip_req_map = {}  
-
-    num_lines = 0
 
     f_out = open(file_out, 'w')
     f_err = open(file_err, 'w')
@@ -81,7 +69,6 @@ def process_data(file_in, file_out, file_inactivity):
                     continue
 
                 log_data = parse_line(line,delimitor)
-                # print(log_data)
 
                 if log_data is None: 
                     f_err.write(f"[ERROR] invalid log: {line}\n")
@@ -100,7 +87,6 @@ def process_data(file_in, file_out, file_inactivity):
                     if ip == new_ip:
                         # check if this req within last session
                         if session_expired:
-                            # reset
                             ip_req_map[ip] = [log_data[1:]]
                         else:
                             ip_req_map[ip].append(log_data[1:])
@@ -119,10 +105,10 @@ def process_data(file_in, file_out, file_inactivity):
 
             num_lines += 1
 
-
-    # write at end of file
+    # write remaining ip when reaching end of file
     for ip in ip_req_map:
         write_output(f_out, ip, ip_req_map[ip])
+        
     f_err.close()
     f_out.close()
     
