@@ -48,4 +48,6 @@ Processed 10000 lines in 0.458 sec
 
 ```
 
+# Credit
 
+this repo is based on https://github.com/InsightDataScience/edgar-analytics.git
