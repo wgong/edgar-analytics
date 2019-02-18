@@ -29,10 +29,22 @@ def write_output(f, ip, lst):
     req_count = len(lst)
     f.write(f"{ip},{date_time_first_req},{date_time_last_req},{duration},{req_count}\n")
 
-def process_data(file_in, file_out, file_inactivity):
-    global headers, header_map
 
-    ts1 = time.clock()
+def process_data(file_in, file_out, file_inactivity):
+    """
+    Function: 
+        process log data
+    Inputs: 
+        file_in - input weblog filename
+        file_out - output filename to store analysis results
+        file_inactivity - file with INACTIVITY_PERIOD parameter value
+    Outputs: 
+        analysis results are written to file_out
+        log lines failed parsing are stored in file_err (similar to file_out with .err extension)
+    Return: 
+        number of lines processed
+    """
+    global headers, header_map
 
     with open(file_inactivity) as f:
         INACTIVITY_PERIOD = int(f.read())
@@ -112,8 +124,7 @@ def process_data(file_in, file_out, file_inactivity):
     f_err.close()
     f_out.close()
     
-    ts2 = time.clock()
-    print("Processed %d lines in %.3f sec" % (num_lines, (ts2-ts1) ))
+    return num_lines
 
 def usage():
     print("")
@@ -168,8 +179,14 @@ def main():
         print("[%s] Invalid param file!" % (sys.argv[0],))
         sys.exit(1)
 
+
+    ts1 = time.clock()
+
     # start processing
-    process_data(file_in, file_out, file_param)
+    total_lines = process_data(file_in, file_out, file_param)
+
+    ts2 = time.clock()
+    print("Processed %d lines in %.3f sec" % (total_lines, (ts2-ts1) ))
 
     # exit
     sys.exit(0)
