@@ -19,12 +19,25 @@ Your job as a data engineer is to build a pipeline to ingest that stream of data
 # Implementation details
 
 Data processing is implemented in python function `process_data` of `src/sessionization.py`. 
-The basic data structure is a dictionary which stores requests of all active sessions.
-Its key is ip address, value is a list of (timestamp in sec, date, time). Other fields are parsed but not used to save memory.
 
-For each new request, if its ip is not found in above dict, it is simply added;
-if it is found, we decide if its previous session is still active, append if yes else write out last session.
-For other ip addresses, we identify expired sessions, then write them out and remove them from dict.
+The basic data structure is a dictionary which stores requests of an active sessions:
+* key: ip address
+* value: list of requests (timestamp in sec, date, time). 
+
+```
+# logic to process each request
+loop over dict.keys
+  if ip eq new_ip
+    if session expired
+      write out last session
+      reset dict to new_ip
+    else
+      append request info (ts, date, time)
+  else
+    if session expired
+      write out last session
+      remove from dict    
+```
 
 # How to run
 see `run.sh` shell script, e.g.
